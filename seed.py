@@ -3,6 +3,7 @@ from app.models.user import User
 from app.models.team import Team, FireTruck, TeamMember, Shift
 from app.models.incident import IncidentType, HazardousMaterial
 from app.models.chat import ChatTemplate
+from app.models.resource import Resource
 from datetime import time
 
 app = create_app()
@@ -251,6 +252,34 @@ with app.app_context():
     ]
     for cat, text in templates:
         db.session.add(ChatTemplate(category=cat, message_text=text))
+
+    if not Resource.query.first():
+        resources = [
+            ("Вода", "water", 50000, "L", "Централен резервоар - София"),
+            ("Вода", "water", 30000, "L", "Резервоар Пловдив"),
+            ("Вода", "water", 20000, "L", "Резервоар Варна"),
+            ("Дизелово гориво", "fuel", 5000, "L", "Горивна база София"),
+            ("Бензин", "fuel", 2000, "L", "Горивна база София"),
+            ("Пяна AFFF 3%", "foam", 5000, "L", "Склад София"),
+            ("Пяна AFFF 6%", "foam", 3000, "L", "Склад Пловдив"),
+            ("Суха пяна", "foam", 2000, "kg", "Склад Варна"),
+            ("Пожарен маркуч 52mm", "equipment", 50, "бр", "Склад София"),
+            ("Пожарен маркуч 75mm", "equipment", 30, "бр", "Склад Пловдив"),
+            ("Стрък 52mm", "equipment", 20, "бр", "Склад Варна"),
+            ("Стрък 75mm", "equipment", 15, "бр", "Склад София"),
+            ("Въздушно-дихателен апарат", "equipment", 25, "бр", "Склад София"),
+            ("Дихателна маска", "equipment", 50, "бр", "Логистичен център"),
+            ("Защитен костюм", "equipment", 40, "бр", "Логистичен център"),
+            ("Каска", "equipment", 60, "бр", "Логистичен център"),
+            ("Ръкавици", "equipment", 200, "чифта", "Логистичен център"),
+            ("Аптечка", "medical", 30, "бр", "Медицински склад"),
+            ("Носилка", "medical", 15, "бр", "Медицински склад"),
+            ("Дефибрилатор", "medical", 5, "бр", "Медицински склад"),
+            ("Питейна вода", "food", 1000, "бутилки", "Склад София"),
+            ("Сухи хранителни пакети", "food", 500, "бр", "Склад София"),
+        ]
+        for name, rtype, qty, unit, loc in resources:
+            db.session.add(Resource(name=name, resource_type=rtype, quantity_available=qty, unit=unit, storage_location=loc, is_consumable=(rtype not in ("vehicle",))))
 
     db.session.commit()
     print("Database seeded successfully!")

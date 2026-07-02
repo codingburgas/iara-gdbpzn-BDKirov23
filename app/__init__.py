@@ -81,8 +81,8 @@ def create_app(config_class=Config):
 
     @app.route("/sw.js")
     def service_worker():
-        js = '''const CACHE = "gdpbzn-v1";
-const STATIC = ["/", "/static/icon.svg"];
+        js = '''const CACHE = "gdpbzn-v2";
+const STATIC = ["/static/icon.svg"];
 self.addEventListener("install", e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(STATIC)));
   self.skipWaiting();
@@ -90,7 +90,7 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => e.waitUntil(clients.claim()));
 self.addEventListener("fetch", e => {
   const url = new URL(e.request.url);
-  if (url.pathname.startsWith("/api/")) {
+  if (url.pathname === "/" || url.pathname.startsWith("/api/")) {
     e.respondWith(networkFirst(e.request));
   } else {
     e.respondWith(cacheFirst(e.request));

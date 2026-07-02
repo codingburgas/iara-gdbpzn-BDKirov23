@@ -15,18 +15,64 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
-:root { --sidebar-bg: #0f0f1a; --primary: #e63946; --accent: #ffd60a; --bg-main: #f0f2f5; --bg-card: #fff; --text-primary: #212529; --text-muted: #6c757d; --border-color: #eef0f2; --shadow: rgba(0,0,0,0.06); }
-[data-theme="dark"] { --sidebar-bg: #0a0a0f; --bg-main: #111118; --bg-card: #1a1a25; --text-primary: #e0e0e0; --text-muted: #8899b0; --border-color: #2a2a3a; --shadow: rgba(0,0,0,0.3); }
-body { background: var(--bg-main); font-family: 'Segoe UI', Tahoma, sans-serif; color: var(--text-primary); transition: background 0.3s, color 0.3s; }
-.sidebar { background: var(--sidebar-bg); min-height: 100vh; color: #fff; position: fixed; width: 260px; z-index: 100; display: flex; flex-direction: column; }
-.sidebar .nav-link { color: #8899b0; padding: 10px 16px; border-radius: 8px; margin: 2px 10px; transition: all 0.2s; font-size: 0.9rem; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+/* LIGHT (default) */
+body, body.light { --sidebar-bg: #0f0f1a; --primary: #e63946; --bg-main: #f0f2f5; --bg-card: #fff; --text-primary: #212529; --text-muted: #6c757d; --border-color: #eef0f2; --shadow: rgba(0,0,0,0.06); background: var(--bg-main); color: var(--text-primary); }
+body.light .card { background: var(--bg-card); color: var(--text-primary); }
+body.light .table { color: var(--text-primary); }
+body.light .table>:not(caption)>*>* { background: var(--bg-card); border-color: var(--border-color); }
+body.light .form-control, body.light .form-select { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+body.light .chat-box { background: var(--bg-main); }
+body.light .chat-msg.received { background: var(--bg-card); border: 1px solid var(--border-color); }
+body.light .template-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); }
+body.light .empty-state { color: var(--text-muted); }
+body.light .modal-content { background: var(--bg-card); color: var(--text-primary); }
+body.light .modal-header, body.light .modal-footer { border-color: var(--border-color); }
+
+/* DARK */
+body.dark { --sidebar-bg: #0a0a0f; --bg-main: #111118; --bg-card: #1a1a25; --text-primary: #e0e0e0; --text-muted: #8899b0; --border-color: #2a2a3a; --shadow: rgba(0,0,0,0.3); background: var(--bg-main); color: var(--text-primary); }
+body.dark .card { background: var(--bg-card); color: var(--text-primary); }
+body.dark .table { color: var(--text-primary); }
+body.dark .table>:not(caption)>*>* { background: var(--bg-card); border-color: var(--border-color); }
+body.dark .form-control, body.dark .form-select { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+body.dark .form-control:focus, body.dark .form-select:focus { background: var(--bg-card); color: var(--text-primary); }
+body.dark .chat-box { background: var(--bg-main); }
+body.dark .chat-msg.received { background: var(--bg-card); border: 1px solid var(--border-color); }
+body.dark .chat-msg .time { color: var(--text-muted); }
+body.dark .template-btn { background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-primary); }
+body.dark .empty-state { color: var(--text-muted); }
+body.dark .modal-content { background: var(--bg-card); color: var(--text-primary); }
+body.dark .modal-header, body.dark .modal-footer { border-color: var(--border-color); }
+body.dark .btn-close { filter: invert(0.8); }
+body.dark .text-muted { color: var(--text-muted) !important; }
+body.dark .table-hover tbody tr:hover { color: var(--text-primary); }
+body.dark .list-group-item { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+body.dark .page-link { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+body.dark .accordion-button { background: var(--bg-card); color: var(--text-primary); }
+body.dark .accordion-body { background: var(--bg-main); color: var(--text-primary); }
+body.dark .dropdown-menu { background: var(--bg-card); color: var(--text-primary); }
+body.dark .dropdown-item { color: var(--text-primary); }
+body.dark .popover { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+body.dark .toast { background: var(--bg-card); color: var(--text-primary); }
+body.dark .alert { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+body.dark .shift-day { border: 1px solid var(--border-color); }
+body.dark .card-header { border-bottom: 1px solid var(--border-color); }
+
+.sidebar { background: #0f0f1a; height: 100vh; position: fixed; width: 260px; z-index: 100; display: flex; flex-direction: column; overflow: hidden; color: #e0e0e0; }
+.sidebar .nav-scroll { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #333 transparent; }
+.sidebar .nav-scroll::-webkit-scrollbar { width: 4px; }
+.sidebar .nav-scroll::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+.sidebar .nav-link { color: #8899b0; padding: 10px 16px; border-radius: 8px; margin: 2px 10px; transition: all 0.2s; font-size: 0.9rem; white-space: nowrap; }
 .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
 .sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
-.logo-area { padding: 20px; border-bottom: 1px solid #1e1e3a; text-align: center; }
+body.dark .sidebar .nav-link { color: #99aabb; }
+body.dark .sidebar .nav-link:hover, body.dark .sidebar .nav-link.active { color: #fff; }
+.logo-area { padding: 20px; border-bottom: 1px solid #1e1e3a; text-align: center; flex-shrink: 0; }
 .logo-area .logo-icon { width: 50px; height: 50px; margin-bottom: 8px; }
-.logo-area h6 { margin: 0; font-weight: 700; font-size: 0.95rem; }
-.logo-area small { opacity: 0.5; font-size: 0.7rem; }
-.sidebar-footer { margin-top: auto; padding: 15px 20px; border-top: 1px solid #1e1e3a; }
+.logo-area h6 { margin: 0; font-weight: 700; font-size: 0.95rem; color: #e0e0e0; }
+.logo-area small { opacity: 0.5; font-size: 0.7rem; color: #8899b0; }
+.sidebar-footer { margin-top: auto; padding: 15px 20px; border-top: 1px solid #1e1e3a; flex-shrink: 0; }
 .main-content { margin-left: 260px; padding: 20px 30px; }
 .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
 .top-bar h4 { margin: 0; font-weight: 600; }
@@ -47,12 +93,12 @@ body { background: var(--bg-main); font-family: 'Segoe UI', Tahoma, sans-serif; 
 .chat-box { height: 350px; overflow-y: auto; background: var(--bg-main); border-radius: 12px; padding: 15px; }
 .chat-msg { margin-bottom: 10px; padding: 8px 14px; border-radius: 16px; max-width: 80%; word-break: break-word; }
 .chat-msg.sent { background: var(--primary); color: #fff; margin-left: auto; border-bottom-right-radius: 4px; }
-.chat-msg.received { background: var(--bg-card); border: 1px solid var(--border-color); border-bottom-left-radius: 4px; }
+.chat-msg.received { background: var(--bg-card); border: 1px solid var(--border-color); }
 .chat-msg .time { font-size: 0.65rem; opacity: 0.6; margin-top: 2px; display: block; }
 .incident-row { cursor: pointer; transition: background 0.15s; }
-.incident-row:hover { background: rgba(var(--primary),0.05); }
-.template-btn { font-size: 0.82rem; text-align: left; padding: 6px 12px; margin-bottom: 4px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); transition: all 0.15s;color: var(--text-primary); }
-.template-btn:hover { background: var(--bg-main); border-color: #ced4da; }
+.incident-row:hover { background: rgba(230,57,70,0.05); }
+.template-btn { font-size: 0.82rem; text-align: left; padding: 6px 12px; margin-bottom: 4px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); transition: all 0.15s; color: var(--text-primary); }
+.template-btn:hover { background: var(--bg-main); }
 .empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
 .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.3; }
 .modal-content { border: none; border-radius: 12px; }
@@ -75,8 +121,8 @@ body { background: var(--bg-main); font-family: 'Segoe UI', Tahoma, sans-serif; 
 .theme-toggle { cursor: pointer; color: #8899b0; font-size: 1.1rem; padding: 4px 8px; border-radius: 8px; transition: all 0.2s; }
 .theme-toggle:hover { color: #ffd60a; background: rgba(255,255,255,0.08); }
 @media (max-width:768px) {
-  .sidebar { width: 100%; min-height: auto; position: relative; }
-  .sidebar .nav { flex-direction: row !important; overflow-x: auto; flex-wrap: nowrap; padding: 8px 0; }
+  .sidebar { width: 100%; height: auto; position: relative; }
+  .sidebar .nav-scroll { flex-direction: row !important; overflow-x: auto; overflow-y: hidden; flex-wrap: nowrap; padding: 8px 0; }
   .sidebar .nav-link { white-space: nowrap; font-size: 0.8rem; padding: 8px 12px; }
   .sidebar-footer { display: none; }
   .main-content { margin-left: 0; padding: 15px; }
@@ -105,7 +151,7 @@ body { background: var(--bg-main); font-family: 'Segoe UI', Tahoma, sans-serif; 
     <h6>ГДПБЗН</h6>
     <small>Оперативен център</small>
   </div>
-  <ul class="nav flex-column mt-2">
+  <div class="nav-scroll"><ul class="nav flex-column">
     <li class="nav-item"><a class="nav-link active" href="#" onclick="showSection('dashboard')"><i class="bi bi-speedometer2"></i>Табло</a></li>
     <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('incidents')"><i class="bi bi-fire"></i>Произшествия</a></li>
     <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('teams')"><i class="bi bi-people"></i>Екипи</a></li>
@@ -117,7 +163,7 @@ body { background: var(--bg-main); font-family: 'Segoe UI', Tahoma, sans-serif; 
     <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('aichat')"><i class="bi bi-robot"></i>AI Чат</a></li>
     <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('resources')"><i class="bi bi-box-seam"></i>Ресурси</a></li>
     <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('api')"><i class="bi bi-code-slash"></i>API</a></li>
-  </ul>
+  </ul></div>
   <div class="sidebar-footer">
     <div class="d-flex align-items-center">
       <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;margin-right:10px;flex-shrink:0;" id="userAvatar">A</div>
@@ -1120,11 +1166,10 @@ let charts = {};
 let shiftWeekOffset = 0;
 
 function toggleTheme() {
-  const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? '' : 'dark');
-  localStorage.setItem('theme', isDark ? 'light' : 'dark');
-  document.querySelector('.theme-toggle i').className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+  const isDark = document.body.classList.toggle('dark');
+  document.body.classList.toggle('light', !isDark);
+  localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  document.querySelector('.theme-toggle i').className = isDark ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
 }
 
 async function loadShiftCalendar() {
@@ -1364,7 +1409,8 @@ async function uploadTruckPhoto(truckId) {
 // Load saved theme
 (function() {
   const saved = localStorage.getItem('theme');
-  if (saved === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.querySelector('.theme-toggle i').className = 'bi bi-sun-fill'; }
+  if (saved === 'dark') { document.body.classList.add('dark'); document.querySelector('.theme-toggle i').className = 'bi bi-sun-fill'; }
+  else { document.body.classList.add('light'); }
 })();
 
 // PWA Install
