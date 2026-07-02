@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#dc3545"/>
+      <stop offset="100%" style="stop-color:#8b0000"/>
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="url(#bg)"/>
+  <g transform="translate(50,48)">
+    <path d="M0-30 L8-10 L28-10 L12 2 L18 22 L0 10 L-18 22 L-12 2 L-28-10 L-8-10 Z" fill="white" stroke="#ffd700" stroke-width="1.5"/>
+    <circle cx="0" cy="-5" r="4" fill="#ffd700"/>
+  </g>
+  <text x="50" y="85" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="bold" fill="white">ГДПБЗН</text>
+</svg>

@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="ГДПБЗН">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" href="/static/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/static/icon.svg">
+<title>ГДПБЗН - Система за управление на произшествия</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root { --sidebar-bg: #0f0f1a; --primary: #e63946; --accent: #ffd60a; --bg-main: #f0f2f5; --bg-card: #fff; --text-primary: #212529; --text-muted: #6c757d; --border-color: #eef0f2; --shadow: rgba(0,0,0,0.06); }
+[data-theme="dark"] { --sidebar-bg: #0a0a0f; --bg-main: #111118; --bg-card: #1a1a25; --text-primary: #e0e0e0; --text-muted: #8899b0; --border-color: #2a2a3a; --shadow: rgba(0,0,0,0.3); }
+body { background: var(--bg-main); font-family: 'Segoe UI', Tahoma, sans-serif; color: var(--text-primary); transition: background 0.3s, color 0.3s; }
+.sidebar { background: var(--sidebar-bg); min-height: 100vh; color: #fff; position: fixed; width: 260px; z-index: 100; display: flex; flex-direction: column; }
+.sidebar .nav-link { color: #8899b0; padding: 10px 16px; border-radius: 8px; margin: 2px 10px; transition: all 0.2s; font-size: 0.9rem; }
+.sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: rgba(255,255,255,0.08); }
+.sidebar .nav-link i { margin-right: 10px; width: 20px; text-align: center; }
+.logo-area { padding: 20px; border-bottom: 1px solid #1e1e3a; text-align: center; }
+.logo-area .logo-icon { width: 50px; height: 50px; margin-bottom: 8px; }
+.logo-area h6 { margin: 0; font-weight: 700; font-size: 0.95rem; }
+.logo-area small { opacity: 0.5; font-size: 0.7rem; }
+.sidebar-footer { margin-top: auto; padding: 15px 20px; border-top: 1px solid #1e1e3a; }
+.main-content { margin-left: 260px; padding: 20px 30px; }
+.top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+.top-bar h4 { margin: 0; font-weight: 600; }
+.card { border: none; border-radius: 12px; box-shadow: 0 1px 3px var(--shadow); margin-bottom: 20px; transition: box-shadow 0.2s; background: var(--bg-card); color: var(--text-primary); }
+.card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.card-header { background: var(--bg-card); border-bottom: 1px solid var(--border-color); font-weight: 600; padding: 15px 20px; border-radius: 12px 12px 0 0 !important; }
+.card-body { padding: 20px; }
+.stat-card { border-radius: 12px; padding: 20px; color: #fff; position: relative; overflow: hidden; }
+.stat-card .icon { font-size: 2.5rem; opacity: 0.2; position: absolute; right: 15px; bottom: 10px; }
+.stat-card h3 { font-size: 2rem; font-weight: 700; margin: 0 0 2px 0; }
+.stat-card p { margin: 0; opacity: 0.85; font-size: 0.85rem; }
+.stat-card.stat-red { background: linear-gradient(135deg, #e63946, #c1121f); }
+.stat-card.stat-orange { background: linear-gradient(135deg, #f4a261, #e76f51); }
+.stat-card.stat-blue { background: linear-gradient(135deg, #457b9d, #1d3557); }
+.stat-card.stat-green { background: linear-gradient(135deg, #2a9d8f, #264653); }
+.stat-card.stat-purple { background: linear-gradient(135deg, #7b2cbf, #3c096c); }
+.badge-status { font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; }
+.chat-box { height: 350px; overflow-y: auto; background: var(--bg-main); border-radius: 12px; padding: 15px; }
+.chat-msg { margin-bottom: 10px; padding: 8px 14px; border-radius: 16px; max-width: 80%; word-break: break-word; }
+.chat-msg.sent { background: var(--primary); color: #fff; margin-left: auto; border-bottom-right-radius: 4px; }
+.chat-msg.received { background: var(--bg-card); border: 1px solid var(--border-color); border-bottom-left-radius: 4px; }
+.chat-msg .time { font-size: 0.65rem; opacity: 0.6; margin-top: 2px; display: block; }
+.incident-row { cursor: pointer; transition: background 0.15s; }
+.incident-row:hover { background: rgba(var(--primary),0.05); }
+.template-btn { font-size: 0.82rem; text-align: left; padding: 6px 12px; margin-bottom: 4px; border-radius: 8px; background: var(--bg-card); border: 1px solid var(--border-color); transition: all 0.15s;color: var(--text-primary); }
+.template-btn:hover { background: var(--bg-main); border-color: #ced4da; }
+.empty-state { text-align: center; padding: 40px 20px; color: var(--text-muted); }
+.empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.3; }
+.modal-content { border: none; border-radius: 12px; }
+.modal-header { border-radius: 12px 12px 0 0; }
+.marker-item { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.8rem; margin: 2px; }
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0% { opacity: 0.6; } 50% { opacity: 1; } 100% { opacity: 0.6; } }
+.sos-btn { position: fixed; bottom: 30px; right: 30px; z-index: 999; width: 60px; height: 60px; border-radius: 50%; background: #e63946; color: #fff; border: none; font-size: 1.8rem; box-shadow: 0 4px 20px rgba(230,57,70,0.5); cursor: pointer; transition: all 0.2s; animation: sosPulse 2s infinite; }
+.sos-btn:hover { transform: scale(1.1); box-shadow: 0 6px 30px rgba(230,57,70,0.7); }
+@keyframes sosPulse { 0% { box-shadow: 0 4px 20px rgba(230,57,70,0.5); } 50% { box-shadow: 0 4px 40px rgba(230,57,70,0.8); } 100% { box-shadow: 0 4px 20px rgba(230,57,70,0.5); } }
+.shift-day { min-height: 80px; border: 1px solid var(--border-color); border-radius: 8px; padding: 6px; font-size: 0.75rem; }
+.shift-day .date-num { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+.shift-member { background: var(--primary); color: #fff; border-radius: 4px; padding: 2px 6px; font-size: 0.65rem; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.photo-thumb { width: 100px; height: 75px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
+.photo-thumb:hover { transform: scale(1.05); }
+.table { color: var(--text-primary); }
+.table>:not(caption)>*>* { background: var(--bg-card); border-color: var(--border-color); }
+.form-control, .form-select { background: var(--bg-card); color: var(--text-primary); border-color: var(--border-color); }
+.form-control:focus, .form-select:focus { background: var(--bg-card); color: var(--text-primary); }
+.theme-toggle { cursor: pointer; color: #8899b0; font-size: 1.1rem; padding: 4px 8px; border-radius: 8px; transition: all 0.2s; }
+.theme-toggle:hover { color: #ffd60a; background: rgba(255,255,255,0.08); }
+@media (max-width:768px) {
+  .sidebar { width: 100%; min-height: auto; position: relative; }
+  .sidebar .nav { flex-direction: row !important; overflow-x: auto; flex-wrap: nowrap; padding: 8px 0; }
+  .sidebar .nav-link { white-space: nowrap; font-size: 0.8rem; padding: 8px 12px; }
+  .sidebar-footer { display: none; }
+  .main-content { margin-left: 0; padding: 15px; }
+  .stat-card h3 { font-size: 1.4rem; }
+  .stat-card { padding: 15px; }
+  .sos-btn { width: 50px; height: 50px; font-size: 1.4rem; bottom: 20px; right: 20px; }
+  .top-bar { flex-wrap: wrap; gap: 8px; }
+  .top-bar h4 { font-size: 1.1rem; }
+}
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="logo-area">
+    <svg class="logo-icon" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="50,10 70,30 65,35 50,20 35,35 30,30" fill="#e63946"/>
+      <polygon points="30,30 35,35 20,50 30,60 50,40 60,50 70,40 80,50 65,35" fill="#ffd60a"/>
+      <rect x="42" y="55" width="16" height="30" rx="3" fill="#e63946"/>
+      <rect x="38" y="48" width="24" height="10" rx="3" fill="#c1121f"/>
+      <rect x="25" y="60" width="50" height="6" rx="3" fill="#ffd60a"/>
+      <circle cx="50" cy="45" r="5" fill="#fff"/>
+      <rect x="44" y="65" width="4" height="15" fill="#ffd60a"/>
+      <rect x="52" y="65" width="4" height="15" fill="#ffd60a"/>
+      <text x="50" y="88" text-anchor="middle" fill="#fff" font-size="10" font-weight="bold">ГДПБЗН</text>
+    </svg>
+    <h6>ГДПБЗН</h6>
+    <small>Оперативен център</small>
+  </div>
+  <ul class="nav flex-column mt-2">
+    <li class="nav-item"><a class="nav-link active" href="#" onclick="showSection('dashboard')"><i class="bi bi-speedometer2"></i>Табло</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('incidents')"><i class="bi bi-fire"></i>Произшествия</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('teams')"><i class="bi bi-people"></i>Екипи</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('shifts')"><i class="bi bi-calendar-week"></i>Смени</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('map')"><i class="bi bi-map"></i>Карта</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('tasks')"><i class="bi bi-list-check"></i>Задачи</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('fleet')"><i class="bi bi-truck"></i>Автопарк</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('stats')"><i class="bi bi-bar-chart"></i>Статистика</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('aichat')"><i class="bi bi-robot"></i>AI Чат</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('resources')"><i class="bi bi-box-seam"></i>Ресурси</a></li>
+    <li class="nav-item"><a class="nav-link" href="#" onclick="showSection('api')"><i class="bi bi-code-slash"></i>API</a></li>
+  </ul>
+  <div class="sidebar-footer">
+    <div class="d-flex align-items-center">
+      <div style="width:32px;height:32px;border-radius:50%;background:var(--primary);display:flex;align-items:center;justify-content:center;font-size:0.8rem;font-weight:bold;margin-right:10px;flex-shrink:0;" id="userAvatar">A</div>
+      <div style="overflow:hidden;flex:1;">
+        <div id="userInfo" style="font-size:0.82rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Няма връзка</div>
+        <div id="userRole" style="font-size:0.7rem;opacity:0.5;">-</div>
+      </div>
+      <span class="theme-toggle" onclick="toggleTheme()" title="Тъмен/светъл режим"><i class="bi bi-moon-fill"></i></span>
+    </div>
+    <button id="installPwaBtn" onclick="installPwa()" style="display:none;width:100%;padding:8px;margin-top:8px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);font-size:0.8rem;cursor:pointer;"><i class="bi bi-download me-1"></i>Инсталирай приложението</button>
+  </div>
+</div>
+
+<div class="main-content">
+  <div id="section-dashboard" class="section">
+    <div class="top-bar"><h4><i class="bi bi-speedometer2 me-2"></i>Оперативно табло</h4><span id="refreshTime" style="color:#6c757d;font-size:0.85rem;"></span></div>
+    <div class="row g-3" id="statsRow">
+      <div class="col-md-3"><div class="stat-card stat-red"><i class="bi bi-fire icon"></i><h3 id="statActiveIncidents">-</h3><p>Активни произшествия</p></div></div>
+      <div class="col-md-3"><div class="stat-card stat-orange"><i class="bi bi-truck icon"></i><h3 id="statDispatchedTeams">-</h3><p>Екипи на терен</p></div></div>
+      <div class="col-md-3"><div class="stat-card stat-blue"><i class="bi bi-people icon"></i><h3 id="statAvailableMembers">-</h3><p>Налични служители</p></div></div>
+      <div class="col-md-3"><div class="stat-card stat-green"><i class="bi bi-check-circle icon"></i><h3 id="statCompletedToday">-</h3><p>Приключени днес</p></div></div>
+    </div>
+    <div class="row g-3 mt-1">
+      <div class="col-md-8">
+        <div class="card"><div class="card-header"><i class="bi bi-list-ul me-2"></i>Последни произшествия</div>
+          <div class="card-body p-0"><table class="table table-hover mb-0"><thead><tr><th>#</th><th>Тип</th><th>Адрес</th><th>Статус</th><th>Приоритет</th><th>Час</th></tr></thead><tbody id="recentIncidents"><tr><td colspan="6" class="text-center text-muted py-3">Зареждане...</td></tr></tbody></table></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card"><div class="card-header"><i class="bi bi-megaphone me-2"></i>Бързи действия</div>
+          <div class="card-body">
+            <button class="btn btn-danger w-100 mb-2" onclick="showNewIncidentForm()"><i class="bi bi-plus-lg me-1"></i>Ново произшествие</button>
+            <button class="btn btn-outline-primary w-100 mb-2" onclick="showSection('incidents')"><i class="bi bi-eye me-1"></i>Всички произшествия</button>
+            <button class="btn btn-outline-secondary w-100" onclick="showSection('map')"><i class="bi bi-geo-alt me-1"></i>Оперативна карта</button>
+          </div>
+        </div>
+        <div class="card"><div class="card-header"><i class="bi bi-info-circle me-2"></i>Системна информация</div>
+          <div class="card-body" style="font-size:0.85rem;">
+            <div class="d-flex justify-content-between mb-1"><span>Сървър:</span><span id="serverStatus" class="text-success">Активен</span></div>
+            <div class="d-flex justify-content-between mb-1"><span>Версия:</span><span>1.0.0</span></div>
+            <div class="d-flex justify-content-between"><span>База данни:</span><span id="dbStatus" class="text-success">OK</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="section-incidents" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-fire me-2"></i>Управление на произшествия</h4>
+      <div><button class="btn btn-danger" onclick="showNewIncidentForm()"><i class="bi bi-plus-lg"></i> Ново</button></div>
+    </div>
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-list-ul me-2"></i>Списък произшествия</span>
+        <select id="filterStatus" class="form-select form-select-sm w-auto" onchange="loadIncidents()">
+          <option value="">Всички статуси</option><option value="registered">Регистриран</option>
+          <option value="dispatched">Изпратен</option><option value="en_route">На път</option>
+          <option value="on_scene">На място</option><option value="in_progress">В процес</option>
+          <option value="contained">Овладян</option><option value="closed">Приключен</option>
+        </select>
+      </div>
+      <div class="card-body p-0"><table class="table table-hover mb-0"><thead><tr><th>#</th><th>Тип</th><th>Адрес</th><th>Статус</th><th>Приоритет</th><th>Екипи</th><th></th></tr></thead><tbody id="incidentList"><tr><td colspan="7" class="text-center text-muted py-3">Зареждане...</td></tr></tbody></table></div>
+    </div>
+    <div class="card mt-3" id="incidentDetail" style="display:none;">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span><i class="bi bi-info-circle me-2"></i>Детайли за произшествие <strong id="detailNumber"></strong></span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('incidentDetail').style.display='none'"><i class="bi bi-x"></i></button>
+      </div>
+      <div class="card-body" id="detailContent"></div>
+    </div>
+  </div>
+
+  <div id="section-teams" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-people me-2"></i>Екипи и служители</h4></div>
+    <div class="row g-3">
+      <div class="col-md-7"><div class="card"><div class="card-header"><i class="bi bi-truck me-2"></i>Екипи</div>
+        <div class="card-body p-0"><table class="table mb-0"><thead><tr><th>Име</th><th>Пожарен автомобил</th><th>Станция</th><th>Налични</th></tr></thead><tbody id="teamList"><tr><td colspan="4" class="text-center text-muted py-3">Зареждане...</td></tr></tbody></table></div>
+      </div></div>
+      <div class="col-md-5"><div class="card"><div class="card-header"><i class="bi bi-person-check me-2"></i>Налични служители (на смяна)</div>
+        <div class="card-body p-0"><table class="table mb-0"><thead><tr><th>Име</th><th>Ранг</th><th>Роля</th><th>Екип</th></tr></thead><tbody id="memberList"><tr><td colspan="4" class="text-center text-muted py-3">Зареждане...</td></tr></tbody></table></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div id="section-map" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-map me-2"></i>Оперативна карта</h4>
+      <div>
+        <button class="btn btn-sm btn-outline-success" onclick="centerMapOn(42.698,23.322,12)"><i class="bi bi-geo"></i> Центрирай</button>
+        <button class="btn btn-sm btn-outline-primary" onclick="addMapMarker()"><i class="bi bi-geo-alt"></i> Добави маркер</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="initGoogleMap()"><i class="bi bi-arrow-clockwise"></i> Обнови</button></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="card"><div class="card-header"><i class="bi bi-key me-2"></i>Google Maps ключ</div>
+          <div class="card-body" style="font-size:0.85rem;">
+            <div class="input-group input-group-sm mb-2">
+              <input type="password" id="gmapApiKey" class="form-control" placeholder="Въведете Google Maps API ключ">
+              <button class="btn btn-outline-secondary" onclick="toggleGmapKey()"><i class="bi bi-eye"></i></button>
+            </div>
+            <button class="btn btn-sm btn-outline-primary w-100" onclick="saveGmapKey()"><i class="bi bi-check-lg"></i> Запази</button>
+            <div id="gmapKeyStatus" class="mt-1 small"></div>
+          </div>
+        </div>
+        <div class="card mt-3"><div class="card-header"><i class="bi bi-funnel me-2"></i>Филтър</div>
+          <div class="card-body" style="font-size:0.85rem;">
+            <select id="mapIncidentFilter" class="form-select form-select-sm" onchange="filterMapMarkers()">
+              <option value="">Всички произшествия</option>
+            </select>
+            <hr>
+            <div id="mapLegend">
+              <div><span class="badge bg-danger" style="width:12px;height:12px;display:inline-block;border-radius:50%;"></span> Пожар</div>
+              <div><span class="badge bg-warning" style="width:12px;height:12px;display:inline-block;border-radius:50%;"></span> Висок приоритет</div>
+              <div><span class="badge bg-primary" style="width:12px;height:12px;display:inline-block;border-radius:50%;"></span> Воден източник</div>
+              <div><span class="badge bg-success" style="width:12px;height:12px;display:inline-block;border-radius:50%;"></span> Екип</div>
+              <div><span class="badge bg-dark" style="width:12px;height:12px;display:inline-block;border-radius:50%;"></span> Опасна зона</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-9">
+        <div class="card"><div class="card-body p-0">
+          <div id="map" style="height:520px;width:100%;border-radius:0 0 0.25rem 0.25rem;background:#e9ecef;"></div>
+        </div></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="section-tasks" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-list-check me-2"></i>Управление на задачи</h4></div>
+    <div class="row g-3">
+      <div class="col-md-5"><div class="card"><div class="card-header"><i class="bi bi-plus-circle me-2"></i>Нова задача</div>
+        <div class="card-body">
+          <div class="mb-2"><label class="form-label small">Произшествие</label><select id="taskIncident" class="form-select form-select-sm"></select></div>
+          <div class="mb-2"><label class="form-label small">Заглавие</label><input id="taskTitle" class="form-control form-control-sm" placeholder="Описание на задачата"></div>
+          <div class="row g-2 mb-2"><div class="col-6"><label class="form-label small">Тип</label><select id="taskType" class="form-select form-select-sm"><option value="operational">Оперативна</option><option value="logistics">Логистична</option><option value="administrative">Административна</option><option value="medical">Медицинска</option><option value="other">Друга</option></select></div><div class="col-6"><label class="form-label small">Приоритет</label><select id="taskPriority" class="form-select form-select-sm"><option value="1">1 - Висок</option><option value="2" selected>2 - Среден</option><option value="3">3 - Нисък</option></select></div></div>
+          <div class="mb-2"><label class="form-label small">Изпълнители</label><div id="taskAssignees"></div></div>
+          <button class="btn btn-primary btn-sm w-100" onclick="createTask()">Създай задача</button>
+        </div>
+      </div></div>
+      <div class="col-md-7"><div class="card"><div class="card-header"><i class="bi bi-list-task me-2"></i>Активни задачи</div>
+        <div class="card-body p-0"><table class="table mb-0"><thead><tr><th>Задача</th><th>Произшествие</th><th>Тип</th><th>Статус</th><th>Изпълнител</th></tr></thead><tbody id="taskList"><tr><td colspan="5" class="text-center text-muted py-3">Зареждане...</td></tr></tbody></table></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div id="section-shifts" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-calendar-week me-2"></i>Календар на смените</h4>
+      <div>
+        <button class="btn btn-sm btn-outline-secondary" onclick="loadShiftCalendar()"><i class="bi bi-arrow-clockwise"></i> Обнови</button>
+        <button class="btn btn-sm btn-outline-primary" onclick="shiftWeekOffset -= 1; loadShiftCalendar()"><i class="bi bi-chevron-left"></i></button>
+        <span id="shiftWeekLabel" class="mx-2 small">Тази седмица</span>
+        <button class="btn btn-sm btn-outline-primary" onclick="shiftWeekOffset += 1; loadShiftCalendar()"><i class="bi bi-chevron-right"></i></button>
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><i class="bi bi-calendar3 me-2"></i>Седмичен график</div>
+      <div class="card-body">
+        <div class="row g-1" id="shiftCalendarGrid"></div>
+      </div>
+    </div>
+    <div class="card"><div class="card-header"><i class="bi bi-list-ul me-2"></i>Всички смени</div>
+      <div class="card-body p-0"><table class="table mb-0"><thead><tr><th>Екип</th><th>Служител</th><th>Начало</th><th>Край</th><th>Тип</th><th>Статус</th></tr></thead><tbody id="shiftList"><tr><td colspan="6" class="text-center text-muted py-3">Зареждане...</td></tr></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="section-fleet" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-truck me-2"></i>Автопарк — Пожарни автомобили</h4>
+      <div><button class="btn btn-sm btn-outline-danger" onclick="loadFleet()"><i class="bi bi-arrow-clockwise"></i> Обнови</button></div>
+    </div>
+    <div class="row g-3" id="fleetGrid"></div>
+  </div>
+
+  <div id="section-stats" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-bar-chart me-2"></i>Статистика и анализи</h4>
+      <div><button class="btn btn-sm btn-outline-secondary" onclick="loadStats()"><i class="bi bi-arrow-clockwise"></i> Обнови</button></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-3"><div class="stat-card stat-red"><i class="bi bi-fire icon"></i><h3 id="statTotalActive">-</h3><p>Активни</p></div></div>
+      <div class="col-md-3"><div class="stat-card stat-green"><i class="bi bi-check-circle icon"></i><h3 id="statTotalClosed">-</h3><p>Приключени</p></div></div>
+      <div class="col-md-3"><div class="stat-card stat-blue"><i class="bi bi-clock icon"></i><h3 id="statAvgTime">-</h3><p>Ср. време за реакция</p></div></div>
+      <div class="col-md-3"><div class="stat-card stat-purple"><i class="bi bi-people icon"></i><h3 id="statTeamsShift">-</h3><p>Екипи на смяна</p></div></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-6"><div class="card"><div class="card-header"><i class="bi bi-pie-chart me-2"></i>Произшествия по тип</div><div class="card-body"><canvas id="chartByType" height="250"></canvas></div></div></div>
+      <div class="col-md-6"><div class="card"><div class="card-header"><i class="bi bi-bar-chart me-2"></i>Произшествия по статус</div><div class="card-body"><canvas id="chartByStatus" height="250"></canvas></div></div></div>
+      <div class="col-md-6"><div class="card"><div class="card-header"><i class="bi bi-activity me-2"></i>Тенденция (последните 7 дни)</div><div class="card-body"><canvas id="chartTrend" height="250"></canvas></div></div></div>
+      <div class="col-md-6"><div class="card"><div class="card-header"><i class="bi bi-exclamation-triangle me-2"></i>Приоритет на произшествията</div><div class="card-body"><canvas id="chartPriority" height="250"></canvas></div></div></div>
+    </div>
+  </div>
+
+  <div id="section-aichat" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-robot me-2"></i>AI Асистент — Чат с изкуствен интелект</h4>
+      <div><button class="btn btn-sm btn-outline-secondary" onclick="clearAIChat()"><i class="bi bi-trash"></i> Изчисти</button></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-3">
+        <div class="card"><div class="card-header"><i class="bi bi-info-circle me-2"></i>За AI асистента</div>
+          <div class="card-body" style="font-size:0.85rem;">
+            <p>AI асистентът може да отговаря на въпроси относно:</p>
+            <ul style="padding-left:18px;">
+              <li>📊 Статистика за произшествия</li>
+              <li>🚒 Налични екипи</li>
+              <li>📦 Ресурси и запаси</li>
+              <li>🔥 Пожарни процедури</li>
+              <li>❓ Общи въпроси</li>
+            </ul>
+            <hr>
+            <label class="small">Обвържи с произшествие:</label>
+            <select id="aiChatIncident" class="form-select form-select-sm mt-1" onchange="AIIndidentChanged()">
+              <option value="">Няма</option>
+            </select>
+            <div id="aiChatContextInfo" class="mt-2 small text-muted" style="display:none;"></div>
+            <hr>
+            <label class="small">🔑 AI модел (Gemini API ключ):</label>
+            <div class="input-group input-group-sm mt-1">
+              <input type="password" id="aiApiKey" class="form-control" placeholder="Въведете Gemini API ключ" value="">
+              <button class="btn btn-outline-secondary" onclick="toggleApiKeyVisibility()" title="Покажи/скрий"><i class="bi bi-eye"></i></button>
+            </div>
+            <button class="btn btn-sm btn-outline-primary mt-2 w-100" onclick="saveApiKey()"><i class="bi bi-check-lg"></i> Запази ключа</button>
+            <div id="aiKeyStatus" class="mt-1" style="font-size:0.75rem;"></div>
+          </div>
+        </div>
+        <div class="card mt-3"><div class="card-header"><i class="bi bi-lightning me-2"></i>Бързи въпроси</div>
+          <div class="card-body" id="quickQuestionsList"></div>
+        </div>
+      </div>
+      <div class="col-md-9">
+        <div class="card"><div class="card-header d-flex justify-content-between align-items-center">
+          <span><i class="bi bi-chat-square-text me-2"></i>Разговор с AI</span>
+          <span id="aiChatStatus" class="text-muted" style="font-size:0.8rem;">готов</span>
+        </div>
+          <div class="card-body chat-box" id="aiChatMessages" style="height:400px;">
+            <div class="text-center py-5" id="aiChatWelcome">
+              <i class="bi bi-robot" style="font-size:3rem;color:#667eea;opacity:0.3;"></i>
+              <h5 class="mt-2">AI Асистент на ГДПБЗН</h5>
+              <p class="text-muted">Задайте въпрос или изберете от бързите въпроси</p>
+            </div>
+          </div>
+          <div class="card-footer">
+            <div class="input-group">
+              <input type="text" id="aiChatInput" class="form-control" placeholder="Напишете вашето съобщение към AI..." onkeydown="if(event.key==='Enter')sendAIChat()">
+              <button class="btn btn-primary" onclick="sendAIChat()"><i class="bi bi-send"></i> Изпрати</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="section-resources" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-box-seam me-2"></i>Ресурси</h4>
+      <div><button class="btn btn-outline-danger btn-sm" onclick="showResourceRequestForm()"><i class="bi bi-plus-lg"></i> Заяви ресурс</button></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-md-7"><div class="card"><div class="card-header"><i class="bi bi-inboxes me-2"></i>Налични ресурси</div>
+        <div class="card-body p-0"><table class="table mb-0"><thead><tr><th>Име</th><th>Тип</th><th>Количество</th><th>Мярка</th><th>Локация</th></tr></thead><tbody id="resourceList"><tr><td colspan="5" class="text-center text-muted py-3">Зареждане...</td></tr></tbody></table></div>
+      </div></div>
+      <div class="col-md-5"><div class="card"><div class="card-header"><i class="bi bi-clock-history me-2"></i>Активни заявки</div>
+        <div class="card-body p-0"><table class="table mb-0"><thead><tr><th>Ресурс</th><th>Количество</th><th>Статус</th></tr></thead><tbody id="requestList"><tr><td colspan="3" class="text-center text-muted py-3">Няма активни заявки</td></tr></tbody></table></div>
+      </div></div>
+    </div>
+  </div>
+
+  <div id="section-api" class="section" style="display:none;">
+    <div class="top-bar"><h4><i class="bi bi-code-slash me-2"></i>API Endpoints</h4></div>
+    <div class="card"><div class="card-body p-0"><table class="table mb-0"><thead><tr><th>Метод</th><th>Endpoint</th><th>Описание</th></tr></thead><tbody>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/auth/login</td><td>Вход в системата</td></tr>
+      <tr><td><span class="badge bg-primary">GET</span></td><td>/api/auth/me</td><td>Текущ потребител</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/incidents</td><td>Създаване на произшествие</td></tr>
+      <tr><td><span class="badge bg-primary">GET</span></td><td>/api/incidents</td><td>Списък произшествия</td></tr>
+      <tr><td><span class="badge bg-warning">PUT</span></td><td>/api/incidents/{id}</td><td>Обновяване статус/детайли</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/incidents/{id}/teams</td><td>Assign-ване на екип</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/incidents/{id}/action-plans</td><td>План за действие</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/incidents/{id}/hazardous-materials</td><td>Добавяне на опасно вещество</td></tr>
+      <tr><td><span class="badge bg-primary">GET</span></td><td>/api/teams</td><td>Списък екипи</td></tr>
+      <tr><td><span class="badge bg-primary">GET</span></td><td>/api/teams/available-members</td><td>Налични служители</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/tasks</td><td>Създаване задача</td></tr>
+      <tr><td><span class="badge bg-primary">GET</span></td><td>/api/tasks/incident/{id}</td><td>Задачи по произшествие</td></tr>
+      <tr><td><span class="badge bg-primary">GET</span></td><td>/api/tasks/my</td><td>Моите задачи</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/chat/messages</td><td>Изпращане на съобщение</td></tr>
+      <tr><td><span class="badge bg-primary">GET</span></td><td>/api/chat/channels/{incident_id}</td><td>Чат канал</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/map/{incident_id}/markers</td><td>Добавяне маркер</td></tr>
+      <tr><td><span class="badge bg-warning">PUT</span></td><td>/api/map/{incident_id}/fire-front</td><td>Актуализация фронт/вятър</td></tr>
+      <tr><td><span class="badge bg-success">POST</span></td><td>/api/resources/requests</td><td>Заявка за ресурс</td></tr>
+    </tbody></table></div></div>
+  </div>
+</div>
+
+<div class="modal fade" id="newIncidentModal" tabindex="-1">
+  <div class="modal-dialog modal-lg"><div class="modal-content">
+    <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-fire me-2"></i>Ново произшествие</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-md-6"><label class="form-label small">Тип на произшествието</label><select id="newIncidentType" class="form-select"></select></div>
+        <div class="col-md-3"><label class="form-label small">Приоритет</label><select id="newPriority" class="form-select"><option value="1">1 - Критичен</option><option value="2" selected>2 - Висок</option><option value="3">3 - Среден</option><option value="4">4 - Нисък</option></select></div>
+        <div class="col-md-3"><label class="form-label small">Канал</label><select id="newChannel" class="form-select"><option value="112">112</option><option value="direct_call">Директно обаждане</option><option value="radio">Радио</option><option value="citizen_report">Граждански сигнал</option></select></div>
+        <div class="col-12"><label class="form-label small">Адрес</label><input id="newAddress" class="form-control" placeholder="ул. Цариградско шосе 150"></div>
+        <div class="col-md-6"><label class="form-label small">Град</label><input id="newCity" class="form-control" value="София"></div>
+        <div class="col-md-3"><label class="form-label small">Latitude</label><input id="newLat" class="form-control" value="42.6977"></div>
+        <div class="col-md-3"><label class="form-label small">Longitude</label><input id="newLng" class="form-control" value="23.3219"></div>
+        <div class="col-12"><label class="form-label small">Описание</label><textarea id="newDescription" class="form-control" rows="2" placeholder="Описание на ситуацията..."></textarea></div>
+        <div class="col-md-6"><label class="form-label small">Докладвано от</label><input id="newReportedBy" class="form-control" placeholder="Име"></div>
+        <div class="col-md-6"><label class="form-label small">Телефон</label><input id="newReporterPhone" class="form-control" placeholder="+359..."></div>
+        <div class="col-12"><label class="form-label small">Изпрати екипи</label><div id="teamCheckboxes" class="d-flex flex-wrap gap-2"></div></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отказ</button><button class="btn btn-danger" onclick="createIncident()"><i class="bi bi-fire me-1"></i>Създай произшествие</button></div>
+  </div></div>
+</div>
+
+<div class="modal fade" id="resourceRequestModal" tabindex="-1">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header bg-warning"><h5 class="modal-title"><i class="bi bi-box-seam me-2"></i>Заявка за ресурс</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+    <div class="modal-body">
+      <div class="mb-2"><label class="form-label small">Произшествие</label><select id="reqIncident" class="form-select form-select-sm"></select></div>
+      <div class="mb-2"><label class="form-label small">Ресурс</label><select id="reqResource" class="form-select form-select-sm"></select></div>
+      <div class="mb-2"><label class="form-label small">Количество</label><input id="reqQuantity" class="form-control form-control-sm" type="number" value="1"></div>
+      <div class="mb-2"><label class="form-label small">Бележки</label><textarea id="reqNotes" class="form-control form-control-sm" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отказ</button><button class="btn btn-warning" onclick="createResourceRequest()">Изпрати заявка</button></div>
+  </div></div>
+</div>
+
+<button class="sos-btn" onclick="showSOSModal()" title="SOS - Спешен сигнал"><i class="bi bi-exclamation-triangle-fill"></i></button>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let token = localStorage.getItem('token');
+let userId = null;
+let currentIncidentId = null;
+let mapMarkers = [];
+
+function api(method, path, body) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  return fetch('/api' + path, { method, headers, body: body ? JSON.stringify(body) : undefined })
+    .then(r => r.json().then(d => ({ status: r.status, data: d })).catch(() => ({ status: r.status, data: null })));
+}
+
+function showSection(name) {
+  document.querySelectorAll('.section').forEach(s => s.style.display = 'none');
+  const sec = document.getElementById('section-' + name);
+  if (sec) sec.style.display = 'block';
+  document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+  const links = document.querySelectorAll('.sidebar .nav-link');
+  const idx = ['dashboard','incidents','teams','shifts','map','tasks','fleet','stats','aichat','resources','api'].indexOf(name);
+  if (idx >= 0 && links[idx]) links[idx].classList.add('active');
+  if (name === 'dashboard') loadDashboard();
+  else if (name === 'incidents') loadIncidents();
+  else if (name === 'teams') loadTeams();
+  else if (name === 'shifts') loadShiftCalendar();
+  else if (name === 'map') loadMapData();
+  else if (name === 'tasks') { loadTaskForm(); loadTasks(); }
+  else if (name === 'fleet') loadFleet();
+  else if (name === 'stats') loadStats();
+  else if (name === 'aichat') loadAIChat();
+  else if (name === 'resources') loadResources();
+}
+
+async function login() {
+  const email = prompt('Email:', 'admin@gdpbzn.bg');
+  const password = prompt('Password:', 'admin123');
+  if (!email || !password) return;
+  const r = await api('POST', '/auth/login', { email, password });
+  if (r.status === 200 && r.data.token) {
+    token = r.data.token; localStorage.setItem('token', token);
+    userId = r.data.user.id;
+    document.getElementById('userInfo').textContent = r.data.user.full_name;
+    document.getElementById('userRole').textContent = r.data.user.role;
+    document.getElementById('userAvatar').textContent = r.data.user.first_name?.charAt(0) || '?';
+    document.getElementById('refreshTime').textContent = new Date().toLocaleString('bg-BG');
+    loadDashboard();
+  } else alert('Грешен email или парола');
+}
+
+async function loadDashboard() {
+  const [incR, teamR, memberR, allR] = await Promise.all([
+    api('GET', '/incidents?per_page=100'),
+    api('GET', '/teams'),
+    api('GET', '/teams/available-members'),
+    api('GET', '/incidents?per_page=5'),
+  ]);
+  const all = incR.data?.incidents || [];
+  const active = all.filter(i => i.status !== 'closed');
+  const dispatched = all.filter(i => ['dispatched','en_route','on_scene','in_progress','contained'].includes(i.status));
+  const closedToday = all.filter(i => i.status === 'closed' && i.closed_at && new Date(i.closed_at).toDateString() === new Date().toDateString());
+  document.getElementById('statActiveIncidents').textContent = active.length;
+  document.getElementById('statDispatchedTeams').textContent = dispatched.length;
+  document.getElementById('statAvailableMembers').textContent = memberR.data?.available_members?.length || 0;
+  document.getElementById('statCompletedToday').textContent = closedToday.length;
+  const tbody = document.getElementById('recentIncidents');
+  tbody.innerHTML = '';
+  const statusL = { registered:'bg-secondary', dispatched:'bg-primary', en_route:'bg-info', on_scene:'bg-warning text-dark', in_progress:'bg-warning text-dark', contained:'bg-success', closed:'bg-light text-muted' };
+  const statusT = { registered:'Регистриран', dispatched:'Изпратен', en_route:'На път', on_scene:'На място', in_progress:'В процес', contained:'Овладян', closed:'Приключен' };
+  for (const inc of (allR.data?.incidents || []).slice(0,5)) {
+    tbody.innerHTML += `<tr class="incident-row" onclick="showSection('incidents')">
+      <td><strong>${inc.incident_number}</strong></td>
+      <td>${inc.incident_type?.name||''}</td>
+      <td>${inc.address||''}</td>
+      <td><span class="badge ${statusL[inc.status]||'bg-secondary'} badge-status">${statusT[inc.status]||inc.status}</span></td>
+      <td><span class="badge bg-${inc.priority<3?'danger':'secondary'}">${inc.priority}</span></td>
+      <td style="font-size:0.8rem;">${new Date(inc.created_at).toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</td>
+    </tr>`;
+  }
+  document.getElementById('refreshTime').textContent = 'Обновено: ' + new Date().toLocaleString('bg-BG');
+}
+
+async function loadIncidents() {
+  const status = document.getElementById('filterStatus').value;
+  const r = await api('GET', '/incidents' + (status ? '?status=' + status : ''));
+  const tbody = document.getElementById('incidentList');
+  tbody.innerHTML = '';
+  const statusT = { registered:'bg-secondary', dispatched:'bg-primary', en_route:'bg-info', on_scene:'bg-warning text-dark', in_progress:'bg-warning text-dark', contained:'bg-success', closed:'bg-light text-muted' };
+  const statusL = { registered:'Регистриран', dispatched:'Изпратен', en_route:'На път', on_scene:'На място', in_progress:'В процес', contained:'Овладян', closed:'Приключен' };
+  for (const inc of r.data?.incidents || []) {
+    const teams = (inc.teams||[]).map(t => `<span class="badge bg-secondary me-1">${t.team?.name||'#'+t.team_id}</span>`).join('');
+    tbody.innerHTML += `<tr class="incident-row" onclick="showIncidentDetail(${inc.id})">
+      <td><strong>${inc.incident_number}</strong></td>
+      <td>${inc.incident_type?.name||''}</td>
+      <td>${inc.address||''}</td>
+      <td><span class="badge ${statusT[inc.status]||'bg-secondary'} badge-status">${statusL[inc.status]||inc.status}</span></td>
+      <td><span class="badge bg-${inc.priority<3?'danger':'secondary'}">${inc.priority}</span></td>
+      <td>${teams||'<small class="text-muted">-</small>'}</td>
+      <td><button class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();showIncidentDetail(${inc.id})"><i class="bi bi-eye"></i></button></td>
+    </tr>`;
+  }
+  if (!r.data?.incidents?.length) tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4"><i class="bi bi-inbox" style="font-size:2rem;display:block;margin-bottom:8px;"></i>Няма произшествия</td></tr>';
+}
+
+async function showIncidentDetail(id) {
+  const r = await api('GET', '/incidents/' + id);
+  if (!r.data?.incident) return;
+  const inc = r.data.incident;
+  currentIncidentId = id;
+  document.getElementById('incidentDetail').style.display = 'block';
+  document.getElementById('detailNumber').textContent = '#' + inc.incident_number;
+  const statusT = { registered:'bg-secondary', dispatched:'bg-primary', en_route:'bg-info', on_scene:'bg-warning text-dark', in_progress:'bg-warning text-dark', contained:'bg-success', closed:'bg-light text-muted' };
+  const statusL = { registered:'Регистриран', dispatched:'Изпратен', en_route:'На път', on_scene:'На място', in_progress:'В процес', contained:'Овладян', closed:'Приключен' };
+  const statusBadge = `<span class="badge ${statusT[inc.status]||'bg-secondary'} badge-status">${statusL[inc.status]||inc.status}</span>`;
+  const teamHtml = (inc.teams||[]).map(t => `<div class="d-flex justify-content-between align-items-center border-bottom py-1"><span><strong>${t.team?.name||'Team #'+t.team_id}</strong> <small class="text-muted">(${t.status})</small></span><button class="btn btn-sm btn-outline-info" onclick="updateTeamStatus(${inc.id},${t.team_id},'on_scene')">Пристигна</button></div>`).join('')||'<small class="text-muted">Няма назначени екипи</small>';
+  const matHtml = (inc.hazardous_materials||[]).map(m => `<li>${m.name} ${m.un_number?'('+m.un_number+')':''}</li>`).join('')||'<small class="text-muted">Няма идентифицирани</small>';
+  const planHtml = (inc.action_plans||[]).map(p => `<div class="border-bottom py-1"><strong>${p.title}</strong>${p.steps ? '<br><small>'+p.steps.map(s=>'• '+s.action).join('<br>')+'</small>' : ''}</div>`).join('')||'<small class="text-muted">Няма план</small>';
+
+  document.getElementById('detailContent').innerHTML = `
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="mb-2"><strong>Тип:</strong> ${inc.incident_type?.name||''}</div>
+        <div class="mb-2"><strong>Статус:</strong> ${statusBadge}</div>
+        <div class="mb-2"><strong>Приоритет:</strong> <span class="badge bg-${inc.priority<3?'danger':'secondary'}">${inc.priority}</span></div>
+        <div class="mb-2"><strong>Канал:</strong> ${inc.channel}</div>
+        <div class="mb-2"><strong>Докладвано от:</strong> ${inc.reported_by||'Няма'} ${inc.reporter_phone?'('+inc.reporter_phone+')':''}</div>
+      </div>
+      <div class="col-md-6">
+        <div class="mb-2"><strong>Адрес:</strong> ${inc.address||''}, ${inc.city||''}</div>
+        <div class="mb-2"><strong>GPS:</strong> <a href="https://www.google.com/maps?q=${inc.latitude},${inc.longitude}" target="_blank">${inc.latitude}, ${inc.longitude}</a>
+      ${inc.latitude ? `<button class="btn btn-sm btn-outline-success ms-1" onclick="getDirections(${inc.latitude},${inc.longitude},'${(inc.address||'').replace(/'/g,"\\'")}')"><i class="bi bi-sign-turn-right"></i> Маршрут</button>` : ''}</div>
+        <div class="mb-2"><strong>Вятър:</strong> ${inc.wind_direction||'-'} ${inc.wind_speed?'('+inc.wind_speed+' km/h)':''}</div>
+        <div class="mb-2"><strong>Пострадали:</strong> ${inc.injured||0} ранени, ${inc.casualties||0} загинали</div>
+      </div>
+    </div>
+    <div class="mb-2"><strong>Описание:</strong><br>${inc.description||'Няма описание'}</div>
+    <hr>
+    <div class="row g-3">
+      <div class="col-md-4"><strong><i class="bi bi-truck me-1"></i>Екипи</strong><div style="max-height:150px;overflow-y:auto;">${teamHtml}</div></div>
+      <div class="col-md-4"><strong><i class="bi bi-exclamation-triangle me-1"></i>Опасни вещества</strong><ul style="max-height:150px;overflow-y:auto;padding-left:18px;">${matHtml}</ul></div>
+      <div class="col-md-4"><strong><i class="bi bi-journal-text me-1"></i>План за действие</strong><div style="max-height:150px;overflow-y:auto;">${planHtml}</div></div>
+    </div>
+    <hr>
+    ${inc.photos && inc.photos.length ? '<div class="mb-2"><strong><i class="bi bi-images me-1"></i>Снимки:</strong><div class="d-flex flex-wrap gap-2 mt-1">' + inc.photos.map(p => `<div><img src="${p.url}" class="photo-thumb" onclick="window.open('${p.url}','_blank')" title="${p.caption||''}"><br><small style="font-size:0.65rem;"><i class="bi bi-trash text-danger" style="cursor:pointer" onclick="deletePhoto(${p.id})"></i></small></div>`).join('') + '</div></div>' : ''}
+    <div class="mb-2"><button class="btn btn-sm btn-outline-primary" onclick="uploadPhoto(${inc.id})"><i class="bi bi-camera"></i> Добави снимка</button></div>
+    <hr>
+    <div class="d-flex flex-wrap gap-1">
+      <button class="btn btn-sm btn-primary" onclick="updateIncidentStatus(${inc.id},'dispatched')"><i class="bi bi-send"></i> Изпрати</button>
+      <button class="btn btn-sm btn-info" onclick="updateIncidentStatus(${inc.id},'en_route')"><i class="bi bi-truck"></i> На път</button>
+      <button class="btn btn-sm btn-warning" onclick="updateIncidentStatus(${inc.id},'on_scene')"><i class="bi bi-geo-alt"></i> На място</button>
+      <button class="btn btn-sm btn-success" onclick="updateIncidentStatus(${inc.id},'contained')"><i class="bi bi-check"></i> Овладян</button>
+      <button class="btn btn-sm btn-secondary" onclick="updateIncidentStatus(${inc.id},'closed')"><i class="bi bi-check-all"></i> Приключи</button>
+      <button class="btn btn-sm btn-outline-danger" onclick="showSOSModal()"><i class="bi bi-exclamation-triangle"></i> SOS</button>
+      <button class="btn btn-sm btn-outline-info" onclick="generatePDF(${inc.id})"><i class="bi bi-file-pdf"></i> PDF</button>
+    </div>
+  `;
+}
+
+async function updateIncidentStatus(id, status) {
+  await api('PUT', '/incidents/' + id, { status });
+  loadIncidents();
+  if (currentIncidentId === id) showIncidentDetail(id);
+}
+
+async function updateTeamStatus(incidentId, teamId, status) {
+  await api('PUT', '/incidents/' + incidentId + '/teams/' + teamId, { status });
+  showIncidentDetail(incidentId);
+}
+
+async function showNewIncidentForm() {
+  const [typesR, teamsR] = await Promise.all([api('GET', '/incidents/types'), api('GET', '/teams')]);
+  const sel = document.getElementById('newIncidentType');
+  sel.innerHTML = '';
+  for (const t of typesR.data?.incident_types || []) sel.innerHTML += `<option value="${t.id}">${t.name} (${t.category})</option>`;
+  const cb = document.getElementById('teamCheckboxes');
+  cb.innerHTML = '';
+  for (const t of teamsR.data?.teams || []) cb.innerHTML += `<div class="form-check form-check-inline"><input class="form-check-input team-cb" type="checkbox" value="${t.id}" id="teamcb${t.id}"><label class="form-check-label" for="teamcb${t.id}">${t.name}</label></div>`;
+  new bootstrap.Modal(document.getElementById('newIncidentModal')).show();
+}
+
+async function createIncident() {
+  const teamCbs = document.querySelectorAll('.team-cb:checked');
+  const teamIds = Array.from(teamCbs).map(cb => parseInt(cb.value));
+  const body = {
+    incident_type_id: parseInt(document.getElementById('newIncidentType').value),
+    address: document.getElementById('newAddress').value,
+    city: document.getElementById('newCity').value,
+    latitude: parseFloat(document.getElementById('newLat').value),
+    longitude: parseFloat(document.getElementById('newLng').value),
+    description: document.getElementById('newDescription').value,
+    priority: parseInt(document.getElementById('newPriority').value),
+    channel: document.getElementById('newChannel').value,
+    reported_by: document.getElementById('newReportedBy').value,
+    reporter_phone: document.getElementById('newReporterPhone').value,
+  };
+  if (teamIds.length) body.team_ids = teamIds;
+  const r = await api('POST', '/incidents', body);
+  if (r.status === 201) {
+    bootstrap.Modal.getInstance(document.getElementById('newIncidentModal')).hide();
+    loadIncidents();
+  } else alert('Грешка: ' + JSON.stringify(r.data));
+}
+
+async function loadTeams() {
+  const [tR, mR] = await Promise.all([api('GET', '/teams'), api('GET', '/teams/available-members')]);
+  const tbody = document.getElementById('teamList');
+  tbody.innerHTML = '';
+  for (const t of tR.data?.teams || []) tbody.innerHTML += `<tr><td><strong>${t.name}</strong></td><td>${t.fire_truck?.registration_number||'<small class="text-muted">Няма</small>'}</td><td>${t.station||'-'}</td><td><span class="badge bg-${t.member_count>0?'success':'secondary'}">${t.member_count||0}</span></td></tr>`;
+  const mb = document.getElementById('memberList');
+  mb.innerHTML = '';
+  for (const m of mR.data?.available_members || []) mb.innerHTML += `<tr><td>${m.user?.full_name||''}</td><td>${m.user?.rank||'<small class="text-muted">-</small>'}</td><td><span class="badge bg-info">${m.user?.role||''}</span></td><td><small>Team #${m.team_id}</small></td></tr>`;
+}
+
+let map = null;
+let mapMarkersCache = [];
+let gmarkers = [];
+
+function toggleGmapKey() {
+  const el = document.getElementById('gmapApiKey');
+  const btn = el.nextElementSibling;
+  el.type = el.type === 'password' ? 'text' : 'password';
+  btn.innerHTML = el.type === 'password' ? '<i class="bi bi-eye"></i>' : '<i class="bi bi-eye-slash"></i>';
+}
+
+function saveGmapKey() {
+  const key = document.getElementById('gmapApiKey').value.trim();
+  const st = document.getElementById('gmapKeyStatus');
+  if (key) {
+    localStorage.setItem('gmap_api_key', key);
+    st.innerHTML = '<span class="text-success">API ключът е запазен. Пресъздайте картата.</span>';
+  } else {
+    localStorage.removeItem('gmap_api_key');
+    st.innerHTML = '<span class="text-muted">Ключът е премахнат.</span>';
+  }
+  setTimeout(() => st.innerHTML = '', 3000);
+}
+
+async function loadMapData() {
+  const key = localStorage.getItem('gmap_api_key');
+  document.getElementById('gmapApiKey').value = key || '';
+  if (key) document.getElementById('gmapKeyStatus').innerHTML = '<span class="text-success" style="font-size:0.75rem;">Ключът е настроен</span>';
+
+  const incR = await api('GET', '/incidents');
+  const sel = document.getElementById('mapIncidentFilter');
+  sel.innerHTML = '<option value="">Всички произшествия</option>';
+  for (const inc of incR.data?.incidents || []) {
+    sel.innerHTML += `<option value="${inc.id}">${inc.incident_number} - ${inc.incident_type?.name||''}</option>`;
+  }
+
+  initGoogleMap();
+}
+
+function initGoogleMap() {
+  const key = localStorage.getItem('gmap_api_key');
+  if (!key) {
+    document.getElementById('map').innerHTML = '<div class="text-center py-5"><i class="bi bi-map" style="font-size:3rem;color:#aaa;"></i><h6 class="mt-2 text-muted">Въведете Google Maps API ключ</h6><p class="text-muted small">За да получите безплатен API ключ: <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Google Cloud Console</a></p></div>';
+    return;
+  }
+
+  if (typeof google === 'undefined') {
+    document.getElementById('map').innerHTML = '<div class="text-center py-5"><div class="spinner-border text-primary mb-2"></div><p class="text-muted">Зареждане на Google Maps...</p></div>';
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${key}&callback=onGmapsReady`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  } else {
+    onGmapsReady();
+  }
+}
+
+function onGmapsReady() {
+  const center = { lat: 42.698, lng: 23.322 };
+  if (!map) {
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: center,
+      zoom: 8,
+      mapTypeId: 'hybrid',
+      mapTypeControl: true,
+      fullscreenControl: true,
+      streetViewControl: false,
+    });
+  }
+  refreshMapMarkers();
+}
+
+function centerMapOn(lat, lng, zoom) {
+  if (map) {
+    map.setCenter({ lat, lng });
+    if (zoom) map.setZoom(zoom);
+  }
+}
+
+async function refreshMapMarkers() {
+  if (!map) return;
+  clearMarkers();
+  const [markerR, incR] = await Promise.all([
+    api('GET', '/map/markers/all'),
+    api('GET', '/incidents?per_page=100'),
+  ]);
+  mapMarkersCache = markerR.data?.markers || [];
+  const incs = incR.data?.incidents || [];
+  filterMapMarkers(incs);
+}
+
+function clearMarkers() {
+  for (const m of gmarkers) m.setMap(null);
+  gmarkers = [];
+}
+
+function filterMapMarkers(incidents) {
+  clearMarkers();
+  const filterId = document.getElementById('mapIncidentFilter').value;
+  const markers = filterId ? mapMarkersCache.filter(m => m.incident_id == filterId) : mapMarkersCache;
+  const allIncidents = incidents || [];
+  const incMap = {};
+  for (const inc of allIncidents) incMap[inc.id] = inc;
+
+  // Plot incidents as big pins
+  const filteredIncs = filterId
+    ? allIncidents.filter(i => i.id == filterId && i.latitude && i.longitude)
+    : allIncidents.filter(i => i.latitude && i.longitude);
+  const teardrop = 'M0-48c-9.8 0-17.7 7.8-17.7 17.4 0 15.6 17.7 30.6 17.7 30.6s17.7-15 17.7-30.6C17.7-40.2 9.8-48 0-48z';
+  const isClosed = (s) => s === 'closed';
+  for (const inc of filteredIncs) {
+    const c = isClosed(inc.status) ? '#2d6a4f' : '#e63946';
+    const pinIcon = {
+      path: teardrop,
+      fillColor: c,
+      fillOpacity: 1,
+      strokeColor: '#fff',
+      strokeWeight: 2,
+      scale: 0.8,
+      anchor: new google.maps.Point(0, 0),
+    };
+    const label = {
+      text: (inc.incident_number || '').replace('FIRE-', '').replace('-', ''),
+      color: '#fff',
+      fontSize: '10px',
+      fontWeight: 'bold',
+    };
+    const gmarker = new google.maps.Marker({
+      position: { lat: inc.latitude, lng: inc.longitude },
+      map,
+      icon: pinIcon,
+      label: label,
+      title: `${inc.incident_number} - ${(inc.incident_type||{}).name||''}`,
+      zIndex: 10,
+    });
+    const statusBg = isClosed(inc.status) ? 'success' : inc.status === 'contained' ? 'warning' : 'danger';
+    const info = new google.maps.InfoWindow({
+      content: `<div style="font-size:13px;min-width:200px;">
+        <strong style="color:${c};">${inc.incident_number}</strong>
+        <span class="badge bg-${statusBg} ms-1">${inc.status}</span>
+        <br>${inc.address || ''}
+        <br><small style="color:#888;">${(inc.incident_type||{}).name||''}</small>
+        <br><button class="btn btn-sm btn-outline-primary mt-1" onclick="showSection('incidents');openIncidentDetail(${inc.id})">📋 Отвори</button>
+      </div>`,
+    });
+    gmarker.addListener('click', () => info.open(map, gmarker));
+    gmarkers.push(gmarker);
+  }
+
+  // Plot manual markers as smaller circles
+  for (const m of markers) {
+    const color = markerColor(m);
+    const icon = {
+      path: google.maps.SymbolPath.CIRCLE,
+      scale: 8,
+      fillColor: color,
+      fillOpacity: 0.9,
+      strokeColor: '#fff',
+      strokeWeight: 2,
+    };
+    if (m.marker_type === 'fire_front') { icon.scale = 14; icon.path = google.maps.SymbolPath.FORWARD_CLOSED_ARROW; }
+    if (m.marker_type === 'danger_zone') { icon.scale = 16; icon.fillOpacity = 0.3; }
+
+    const inc = incMap[m.incident_id];
+    const gmarker = new google.maps.Marker({
+      position: { lat: m.latitude, lng: m.longitude },
+      map,
+      icon,
+      title: m.label || m.marker_type,
+    });
+    const info = new google.maps.InfoWindow({
+      content: `<div style="font-size:13px;">
+        <strong>${m.label || m.marker_type}</strong>
+        ${inc ? `<br><small>${inc.incident_number}</small>` : ''}
+        <br>📍 ${m.latitude.toFixed(4)}, ${m.longitude.toFixed(4)}
+        <br><small style="color:#888;">${m.marker_type}${m.radius ? ' | R='+m.radius+'m' : ''}</small>
+      </div>`,
+    });
+    gmarker.addListener('click', () => info.open(map, gmarker));
+    gmarkers.push(gmarker);
+  }
+}
+
+function markerColor(m) {
+  const colors = {
+    fire_front: '#e63946', wind_direction: '#457b9d', danger_zone: '#1d3557',
+    assembly_point: '#2a9d8f', water_source: '#0077b6', hazard: '#e76f51',
+    team_position: '#52b788', casualty: '#e63946', other: '#6c757d',
+  };
+  return colors[m.marker_type] || '#6c757d';
+}
+
+async function addMapMarker() {
+  const incR = await api('GET', '/incidents?per_page=50');
+  const incs = incR.data?.incidents || [];
+  if (!incs.length) return alert('Няма произшествия');
+  const modal = document.createElement('div');
+  modal.innerHTML = `
+    <div class="modal fade" id="mapMarkerModal" tabindex="-1"><div class="modal-dialog modal-sm"><div class="modal-content">
+      <div class="modal-header bg-dark text-white"><h6 class="modal-title">Нов маркер</h6><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body">
+        <div class="mb-2"><label class="small">Произшествие</label><select id="mmIncident" class="form-select form-select-sm">${incs.map(i => `<option value="${i.id}">${i.incident_number}</option>`).join('')}</select></div>
+        <div class="mb-2"><label class="small">Тип</label><select id="mmType" class="form-select form-select-sm">
+          <option value="team_position">Екип</option><option value="fire_front">Фронт на пожар</option>
+          <option value="water_source">Воден източник</option><option value="danger_zone">Опасна зона</option>
+          <option value="assembly_point">Сборен пункт</option><option value="hazard">Опасност</option>
+          <option value="wind_direction">Посока на вятър</option><option value="casualty">Пострадал</option>
+        </select></div>
+        <div class="mb-2"><label class="small">Етикет</label><input id="mmLabel" class="form-control form-control-sm" placeholder="Описание"></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Отказ</button><button class="btn btn-sm btn-primary" id="mmSaveBtn">Запази</button></div>
+    </div></div></div>`;
+  document.body.appendChild(modal);
+  const m = new bootstrap.Modal(document.getElementById('mapMarkerModal'));
+  m.show();
+
+  document.getElementById('mmSaveBtn').onclick = async function () {
+    const incidentId = document.getElementById('mmIncident').value;
+    const markerType = document.getElementById('mmType').value;
+    const label = document.getElementById('mmLabel').value;
+    if (!incidentId) return alert('Изберете произшествие');
+    const center = map ? map.getCenter() : { lat: () => 42.698, lng: () => 23.322 };
+    await api('POST', `/map/${incidentId}/markers`, {
+      marker_type: markerType, label: label || markerType,
+      latitude: center.lat(), longitude: center.lng(),
+      color: markerColor({ marker_type: markerType }),
+    });
+    m.hide();
+    refreshMapMarkers();
+  };
+  document.getElementById('mapMarkerModal').addEventListener('hidden.bs.modal', () => modal.remove());
+}
+
+async function loadTaskForm() {
+  const [incR, memberR] = await Promise.all([api('GET', '/incidents'), api('GET', '/teams/available-members')]);
+  const sel = document.getElementById('taskIncident');
+  sel.innerHTML = '<option value="">Избери произшествие</option>';
+  for (const inc of incR.data?.incidents || []) sel.innerHTML += `<option value="${inc.id}">${inc.incident_number}</option>`;
+  const as = document.getElementById('taskAssignees');
+  as.innerHTML = '';
+  for (const m of memberR.data?.available_members || []) as.innerHTML += `<div class="form-check form-check-inline"><input class="form-check-input task-assignee" type="checkbox" value="${m.user.id}" id="assignee${m.user.id}"><label class="form-check-label small" for="assignee${m.user.id}">${m.user?.full_name||''}</label></div>`;
+}
+
+async function createTask() {
+  const incidentId = document.getElementById('taskIncident').value;
+  const title = document.getElementById('taskTitle').value;
+  const type = document.getElementById('taskType').value;
+  const priority = parseInt(document.getElementById('taskPriority').value);
+  const assigneeCbs = document.querySelectorAll('.task-assignee:checked');
+  if (!incidentId || !title) return alert('Изберете произшествие и въведете заглавие');
+  const r = await api('POST', '/tasks', { incident_id:parseInt(incidentId), title, task_type:type, priority, assigned_user_ids:Array.from(assigneeCbs).map(cb=>parseInt(cb.value)) });
+  if (r.status === 201) { document.getElementById('taskTitle').value = ''; loadTasks(); }
+}
+
+async function loadTasks() {
+  const r = await api('GET', '/incidents?per_page=50');
+  const tbody = document.getElementById('taskList');
+  tbody.innerHTML = '';
+  for (const inc of r.data?.incidents || []) {
+    const tr = await api('GET', '/tasks/incident/' + inc.id);
+    for (const t of tr.data?.tasks || []) {
+      const statusT = { pending:'bg-secondary', in_progress:'bg-primary', completed:'bg-success', cancelled:'bg-light text-muted' };
+      tbody.innerHTML += `<tr><td>${t.title}</td><td><small>${inc.incident_number}</small></td><td><small>${t.task_type}</small></td><td><span class="badge ${statusT[t.status]||'bg-secondary'}">${t.status}</span></td><td><small>${(t.assignments||[]).map(a=>a.user?.full_name||'').join(', ')||'-'}</small></td></tr>`;
+    }
+  }
+}
+
+async function showResourceRequestForm() {
+  const [incR, resR] = await Promise.all([api('GET', '/incidents'), api('GET', '/resources')]);
+  const sel = document.getElementById('reqIncident');
+  sel.innerHTML = '<option value="">Избери произшествие</option>';
+  for (const inc of incR.data?.incidents || []) sel.innerHTML += `<option value="${inc.id}">${inc.incident_number}</option>`;
+  const rs = document.getElementById('reqResource');
+  rs.innerHTML = '<option value="">Избери ресурс</option>';
+  for (const r of resR.data?.resources || []) rs.innerHTML += `<option value="${r.id}">${r.name} (${r.quantity_available} ${r.unit||''})</option>`;
+  new bootstrap.Modal(document.getElementById('resourceRequestModal')).show();
+}
+
+async function createResourceRequest() {
+  const incidentId = document.getElementById('reqIncident').value;
+  const resourceId = document.getElementById('reqResource').value;
+  const quantity = document.getElementById('reqQuantity').value;
+  const notes = document.getElementById('reqNotes').value;
+  if (!incidentId || !resourceId) return alert('Изберете произшествие и ресурс');
+  await api('POST', '/resources/requests', { incident_id:parseInt(incidentId), resource_id:parseInt(resourceId), quantity:parseFloat(quantity), notes });
+  bootstrap.Modal.getInstance(document.getElementById('resourceRequestModal')).hide();
+  loadResources();
+}
+
+async function loadResources() {
+  const [resR, reqR] = await Promise.all([api('GET', '/resources'), api('GET', '/incidents?per_page=10')]);
+  const tbody = document.getElementById('resourceList');
+  tbody.innerHTML = '';
+  for (const res of resR.data?.resources || []) {
+    tbody.innerHTML += `<tr><td><strong>${res.name}</strong></td><td><span class="badge bg-secondary">${res.resource_type}</span></td><td>${res.quantity_available}</td><td>${res.unit||'-'}</td><td><small>${res.storage_location||'-'}</small></td></tr>`;
+  }
+  const rt = document.getElementById('requestList');
+  rt.innerHTML = '';
+  for (const inc of reqR.data?.incidents || []) {
+    const rr = await api('GET', '/resources/requests/' + inc.id);
+    for (const r of rr.data?.requests || []) {
+      const stL = { pending:'bg-warning text-dark', approved:'bg-primary', in_transit:'bg-info', delivered:'bg-success', rejected:'bg-danger' };
+      rt.innerHTML += `<tr><td>${r.resource?.name||''}</td><td>${r.quantity}</td><td><span class="badge ${stL[r.status]||'bg-secondary'}">${r.status}</span></td></tr>`;
+    }
+  }
+}
+
+function toggleApiKeyVisibility() {
+  const el = document.getElementById('aiApiKey');
+  const btn = el.nextElementSibling;
+  if (el.type === 'password') {
+    el.type = 'text';
+    btn.innerHTML = '<i class="bi bi-eye-slash"></i>';
+  } else {
+    el.type = 'password';
+    btn.innerHTML = '<i class="bi bi-eye"></i>';
+  }
+}
+
+function saveApiKey() {
+  const key = document.getElementById('aiApiKey').value.trim();
+  const status = document.getElementById('aiKeyStatus');
+  if (key) {
+    localStorage.setItem('gemini_api_key', key);
+    status.innerHTML = '<span class="text-success">✅ API ключът е запазен!</span>';
+  } else {
+    localStorage.removeItem('gemini_api_key');
+    status.innerHTML = '<span class="text-muted">Ключът е премахнат. Ще се използва вградения AI.</span>';
+  }
+  setTimeout(() => status.innerHTML = '', 3000);
+}
+
+async function loadAIChat() {
+  const storedKey = localStorage.getItem('gemini_api_key');
+  if (storedKey) {
+    document.getElementById('aiApiKey').value = storedKey;
+    document.getElementById('aiKeyStatus').innerHTML = '<span class="text-success" style="font-size:0.75rem;">✅ API ключът е настроен</span>';
+  }
+  const r = await api('GET', '/incidents');
+  const sel = document.getElementById('aiChatIncident');
+  sel.innerHTML = '<option value="">Няма</option>';
+  for (const inc of r.data?.incidents || []) sel.innerHTML += `<option value="${inc.id}">${inc.incident_number} - ${inc.incident_type?.name||''}</option>`;
+  const ql = document.getElementById('quickQuestionsList');
+  const questions = [
+    'Колко са активните произшествия?',
+    'Кои екипи са налични?',
+    'Какви ресурси имаме?',
+    'Как да създам нов инцидент?',
+    'Каква е процедурата при пожар?',
+    'Брой пожари за днес',
+  ];
+  ql.innerHTML = questions.map(q => `<button class="template-btn w-100" onclick="askAIQuick('${q}')"><small>${q}</small></button>`).join('');
+}
+
+async function askAIQuick(question) {
+  document.getElementById('aiChatInput').value = question;
+  sendAIChat();
+}
+
+function AIIndidentChanged() {
+  const id = document.getElementById('aiChatIncident').value;
+  const info = document.getElementById('aiChatContextInfo');
+  if (id) { info.style.display = 'block'; info.textContent = 'Контекст: Произшествие #' + id; }
+  else { info.style.display = 'none'; }
+}
+
+async function sendAIChat() {
+  const input = document.getElementById('aiChatInput');
+  const message = input.value.trim();
+  if (!message) return;
+  input.value = '';
+
+  const box = document.getElementById('aiChatMessages');
+  const welcome = document.getElementById('aiChatWelcome');
+  if (welcome) welcome.style.display = 'none';
+
+  box.innerHTML += `<div class="chat-msg sent"><small style="opacity:0.7;">Вие</small><br>${message.replace(/\n/g,'<br>')}<span class="time">${new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</span></div>`;
+
+  document.getElementById('aiChatStatus').textContent = 'AI мисли...';
+  document.getElementById('aiChatStatus').style.color = '#667eea';
+
+  const incidentId = document.getElementById('aiChatIncident').value;
+  const storedKey = localStorage.getItem('gemini_api_key') || '';
+  const body = { message, incident_id: incidentId ? parseInt(incidentId) : null };
+  if (storedKey) body.gemini_api_key = storedKey;
+
+  const r = await api('POST', '/chat/ai-chat', body);
+
+  document.getElementById('aiChatStatus').textContent = 'готов';
+  document.getElementById('aiChatStatus').style.color = '';
+
+  const response = r.data?.response || 'Извинете, не разбрах въпроса. Моля, опитайте отново.';
+  const formattedResponse = response.replace(/\n/g, '<br>');
+  box.innerHTML += `<div class="chat-msg received"><small style="opacity:0.7;">AI Асистент</small><br>${formattedResponse}<span class="time">${new Date().toLocaleTimeString('bg-BG',{hour:'2-digit',minute:'2-digit'})}</span></div>`;
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function clearAIChat() {
+  document.getElementById('aiChatMessages').innerHTML = `
+    <div class="text-center py-5" id="aiChatWelcome">
+      <i class="bi bi-robot" style="font-size:3rem;color:#667eea;opacity:0.3;"></i>
+      <h5 class="mt-2">AI Асистент на ГДПБЗН</h5>
+      <p class="text-muted">Задайте въпрос или изберете от бързите въпроси</p>
+    </div>`;
+}
+
+let charts = {};
+let shiftWeekOffset = 0;
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? '' : 'dark');
+  localStorage.setItem('theme', isDark ? 'light' : 'dark');
+  document.querySelector('.theme-toggle i').className = isDark ? 'bi bi-moon-fill' : 'bi bi-sun-fill';
+}
+
+async function loadShiftCalendar() {
+  const r = await api('GET', '/teams');
+  const grid = document.getElementById('shiftCalendarGrid');
+  const today = new Date();
+  const startOfWeek = new Date(today);
+  startOfWeek.setDate(today.getDate() + shiftWeekOffset * 7 - today.getDay() + 1);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(startOfWeek.getDate() + 6);
+  document.getElementById('shiftWeekLabel').textContent = startOfWeek.toLocaleDateString('bg-BG') + ' - ' + endOfWeek.toLocaleDateString('bg-BG');
+  grid.innerHTML = '<div class="col-12"><div class="row g-1">';
+  const days = ['Пон', 'Вто', 'Сря', 'Чет', 'Пет', 'Съб', 'Нед'];
+  days.forEach(d => grid.innerHTML += `<div class="col text-center fw-bold small py-2">${d}</div>`);
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(startOfWeek);
+    d.setDate(d.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
+    grid.innerHTML += `<div class="col"><div class="shift-day"><div class="date-num">${d.getDate()}</div>`;
+    for (const team of r.data?.teams || []) {
+      for (const m of team.members || []) {
+        grid.innerHTML += `<div class="shift-member" title="${m.user?.full_name||''}">${team.name}: ${m.user?.full_name||''}</div>`;
+      }
+    }
+    grid.innerHTML += '</div></div>';
+  }
+  grid.innerHTML += '</div></div>';
+  const shiftR = await api('GET', '/teams');
+  const tbody = document.getElementById('shiftList');
+  tbody.innerHTML = '';
+  for (const team of shiftR.data?.teams || []) {
+    for (const m of team.members || []) {
+      tbody.innerHTML += `<tr><td>${team.name}</td><td>${m.user?.full_name||''}</td><td>${m.shift_start||'N/A'}</td><td>${m.shift_end||'N/A'}</td><td><span class="badge bg-info">${m.shift_type||'дневна'}</span></td><td><span class="badge bg-${m.is_on_shift?'success':'secondary'}">${m.is_on_shift?'на смяна':'почива'}</span></td></tr>`;
+    }
+  }
+}
+
+async function loadStats() {
+  const r = await api('GET', '/incidents/stats');
+  const d = r.data || {};
+  document.getElementById('statTotalActive').textContent = d.active || 0;
+  document.getElementById('statTotalClosed').textContent = d.closed || 0;
+  document.getElementById('statAvgTime').textContent = d.avg_response_time_hours ? d.avg_response_time_hours.toFixed(1) + 'ч' : 'N/A';
+  document.getElementById('statTeamsShift').textContent = d.teams_on_shift || 0;
+
+  if (charts.byType) charts.byType.destroy();
+  if (charts.byStatus) charts.byStatus.destroy();
+  if (charts.trend) charts.trend.destroy();
+  if (charts.priority) charts.priority.destroy();
+  const statusColors = { registered:'#6c757d', dispatched:'#0d6efd', en_route:'#0dcaf0', on_scene:'#ffc107', in_progress:'#fd7e14', contained:'#198754', closed:'#adb5bd' };
+  charts.byType = new Chart(document.getElementById('chartByType'), { type:'doughnut', data:{ labels:(d.by_type||[]).map(t=>t.name), datasets:[{ data:(d.by_type||[]).map(t=>t.count), backgroundColor:['#e63946','#f4a261','#457b9d','#2a9d8f','#7b2cbf','#e76f51','#ffd60a','#6c757d'] }] }, options:{ responsive:true, plugins:{ legend:{position:'bottom'} } } });
+  charts.byStatus = new Chart(document.getElementById('chartByStatus'), { type:'bar', data:{ labels:(d.by_status||[]).map(s=>s.status), datasets:[{ label:'Брой', data:(d.by_status||[]).map(s=>s.count), backgroundColor:(d.by_status||[]).map(s=>statusColors[s.status]||'#6c757d') }] }, options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } } });
+  charts.trend = new Chart(document.getElementById('chartTrend'), { type:'line', data:{ labels:['Днес','-1','-2','-3','-4','-5','-6'], datasets:[{ label:'Произшествия', data:[d.today_count||0,0,0,0,0,0,0], borderColor:'#e63946', fill:false, tension:0.3 }] }, options:{ responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1} } } } });
+  charts.priority = new Chart(document.getElementById('chartPriority'), { type:'pie', data:{ labels:['Приоритет 1','Приоритет 2','Приоритет 3','Приоритет 4'], datasets:[{ data:[(d.by_priority||[]).find(p=>p.priority==1)?.count||0, (d.by_priority||[]).find(p=>p.priority==2)?.count||0, (d.by_priority||[]).find(p=>p.priority==3)?.count||0, (d.by_priority||[]).find(p=>p.priority==4)?.count||0], backgroundColor:['#e63946','#f4a261','#ffd60a','#6c757d'] }] }, options:{ responsive:true, plugins:{ legend:{position:'bottom'} } } });
+}
+
+function showSOSModal() {
+  const modal = document.createElement('div');
+  modal.innerHTML = `
+    <div class="modal fade" id="sosModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content">
+      <div class="modal-header bg-danger text-white"><h5 class="modal-title"><i class="bi bi-exclamation-triangle-fill me-2"></i>SOS - Спешен сигнал</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body text-center py-4">
+        <i class="bi bi-exclamation-triangle" style="font-size:4rem;color:#e63946;"></i>
+        <h4 class="mt-3">Изпращане на спешен сигнал</h4>
+        <p class="text-muted">Това ще уведоми всички диспечери и екипи за вашата ситуация.</p>
+        <div class="mb-3"><label class="form-label small">Свързано произшествие (опционално)</label><select id="sosIncident" class="form-select"><option value="">Няма</option></select></div>
+        <div class="mb-3"><label class="form-label small">Съобщение</label><textarea id="sosMessage" class="form-control" rows="2" placeholder="Опишете ситуацията..."></textarea></div>
+        <div id="sosCoords" class="small text-muted mb-2"></div>
+      </div>
+      <div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Отказ</button><button class="btn btn-danger" id="sosSendBtn" onclick="sendSOS()"><i class="bi bi-exclamation-triangle-fill me-1"></i> ИЗПРАТИ SOS</button></div>
+    </div></div></div>`;
+  document.body.appendChild(modal);
+  const m = new bootstrap.Modal(document.getElementById('sosModal'));
+  m.show();
+  api('GET', '/incidents').then(r => {
+    const sel = document.getElementById('sosIncident');
+    for (const inc of r.data?.incidents || []) sel.innerHTML += `<option value="${inc.id}">${inc.incident_number}</option>`;
+  });
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(p => document.getElementById('sosCoords').textContent = '📍 Вашите координати: ' + p.coords.latitude.toFixed(4) + ', ' + p.coords.longitude.toFixed(4));
+  }
+  document.getElementById('sosModal').addEventListener('hidden.bs.modal', () => modal.remove());
+}
+
+async function sendSOS() {
+  document.getElementById('sosSendBtn').disabled = true;
+  document.getElementById('sosSendBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Изпращане...';
+  let lat = null, lng = null;
+  if (navigator.geolocation) {
+    try {
+      const pos = await new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, {timeout:5000}));
+      lat = pos.coords.latitude; lng = pos.coords.longitude;
+    } catch(e) {}
+  }
+  const incidentId = document.getElementById('sosIncident').value;
+  await api('POST', '/incidents/sos', {
+    incident_id: incidentId ? parseInt(incidentId) : null,
+    message: document.getElementById('sosMessage').value || 'SOS сигнал!',
+    latitude: lat, longitude: lng, signal_type: 'panic',
+  });
+  bootstrap.Modal.getInstance(document.getElementById('sosModal')).hide();
+  alert('✅ SOS сигналът е изпратен! Диспечерът е уведомен.');
+}
+
+function generatePDF(id) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  doc.setFontSize(18); doc.text('ГДПБЗН - Протокол за произшествие', 105, 20, { align: 'center' });
+  doc.setFontSize(10); doc.text('Главна дирекция пожарна безопасност и защита на населението', 105, 28, { align: 'center' });
+  doc.line(20, 32, 190, 32);
+  api('GET', '/incidents/' + id + '?include=all').then(r => {
+    const inc = r.data?.incident || {};
+    let y = 40;
+    doc.setFontSize(12);
+    const fields = [
+      ['Номер', inc.incident_number], ['Тип', inc.incident_type?.name], ['Статус', inc.status],
+      ['Адрес', inc.address + ', ' + inc.city], ['GPS', inc.latitude + ', ' + inc.longitude],
+      ['Приоритет', inc.priority], ['Докладвано от', inc.reported_by],
+      ['Описание', inc.description], ['Пострадали', inc.casualties + ' загинали, ' + inc.injured + ' ранени'],
+      ['Вятър', inc.wind_direction + ' ' + (inc.wind_speed||'')],
+      ['Създадено', new Date(inc.created_at).toLocaleString('bg-BG')],
+    ];
+    for (const [k,v] of fields) {
+      doc.setFont('Helvetica', 'bold'); doc.text(k + ':', 25, y);
+      doc.setFont('Helvetica', 'normal'); doc.text(String(v||'-'), 70, y);
+      y += 7;
+    }
+    y += 10;
+    if (inc.teams && inc.teams.length) {
+      doc.setFont('Helvetica', 'bold'); doc.text('Назначени екипи:', 25, y); y += 6;
+      doc.setFont('Helvetica', 'normal');
+      for (const t of inc.teams) { doc.text('• ' + (t.team?.name||'') + ' (' + t.status + ')', 30, y); y += 5; }
+    }
+    y += 10;
+    doc.setFontSize(10); doc.text('Документът е генериран автоматично от системата на ГДПБЗН.', 105, y, { align: 'center' });
+    doc.save('произшествие_' + inc.incident_number + '.pdf');
+  });
+}
+
+async function uploadPhoto(id) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('caption', prompt('Описание на снимката:') || '');
+    const r = await fetch('/api/incidents/' + id + '/photos', {
+      method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+      body: fd,
+    });
+    if (r.ok) showIncidentDetail(id);
+  };
+  input.click();
+}
+
+async function deletePhoto(photoId) {
+  if (!confirm('Изтриване на снимката?')) return;
+  await api('DELETE', '/incidents/photos/' + photoId);
+  if (currentIncidentId) showIncidentDetail(currentIncidentId);
+}
+
+function getDirections(lat, lng, address) {
+  const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`;
+  window.open(url, '_blank');
+}
+
+async function loadFleet() {
+  const r = await api('GET', '/teams/fleet');
+  const grid = document.getElementById('fleetGrid');
+  grid.innerHTML = '';
+  const typeLabels = { fire_engine:'Пожарен автомобил', water_tanker:'Водовоз', turntable_ladder:'Стълба', aerial_platform:'Платформа', rescue_vehicle:'Спасителен', command_vehicle:'Команден', other:'Друг' };
+  for (const t of r.data?.trucks || []) {
+    const teamName = t.team?.name || 'Неназначен';
+    const statusColor = t.is_available ? 'success' : 'secondary';
+    const statusText = t.is_available ? 'Наличен' : 'В ремонт/зает';
+    const photoSrc = t.photo_url && (t.photo_url.startsWith('/static/') || t.photo_url.startsWith('http')) ? t.photo_url : null;
+    const specs = [];
+    if (t.year_manufactured) specs.push(`🚙 ${t.year_manufactured} г.`);
+    if (t.mileage_km) specs.push(`📏 ${(t.mileage_km/1000).toFixed(1)}k km`);
+    if (t.water_tank_l) specs.push(`💧 ${(t.water_tank_l/1000).toFixed(1)}t вода`);
+    if (t.foam_tank_l) specs.push(`🧪 ${t.foam_tank_l}L пяна`);
+    grid.innerHTML += `
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div style="height:200px;overflow:hidden;border-radius:12px 12px 0 0;background:#1a1a2e;display:flex;align-items:center;justify-content:center;position:relative;" class="fleet-photo-container">
+            ${photoSrc ? `<img src="${photoSrc}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+              : `<i class="bi bi-camera" style="font-size:3rem;color:#555;display:flex;align-items:center;justify-content:center;width:100%;height:100%;"></i>`}
+            <button class="btn btn-sm btn-dark" style="position:absolute;bottom:8px;right:8px;opacity:0.8;font-size:0.7rem;" onclick="uploadTruckPhoto(${t.id})"><i class="bi bi-camera"></i> ${photoSrc?'Смени':'Добави'}</button>
+          </div>
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <div>
+                <h5 class="mb-0" style="font-weight:700;">${t.registration_number}</h5>
+                <small class="text-muted">${t.model} — ${typeLabels[t.type]||t.type}</small>
+              </div>
+              <span class="badge bg-${statusColor}">${statusText}</span>
+            </div>
+            <div class="mb-2"><span class="badge bg-info">${teamName}</span></div>
+            ${specs.length ? `<div style="font-size:0.8rem;">${specs.join(' · ')}</div>` : ''}
+            <hr style="margin:10px 0;">
+            <div style="font-size:0.8rem;">
+              <div><i class="bi bi-people me-1"></i>Капацитет: <strong>${t.capacity || '-'} ч.</strong></div>
+              <div><i class="bi bi-geo me-1"></i>GPS: <code>${t.gps_device_id || '-'}</code></div>
+              ${t.equipment_notes ? `<div><i class="bi bi-tools me-1"></i>${t.equipment_notes}</div>` : ''}
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+  if (!r.data?.trucks?.length) grid.innerHTML = '<div class="col-12"><div class="empty-state"><i class="bi bi-truck"></i><p>Няма регистрирани автомобили</p></div></div>';
+}
+
+async function uploadTruckPhoto(truckId) {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.onchange = async function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const fd = new FormData();
+    fd.append('file', file);
+    const r = await fetch('/api/teams/fleet/' + truckId + '/photo', {
+      method: 'POST',
+      headers: token ? { 'Authorization': 'Bearer ' + token } : {},
+      body: fd,
+    });
+    if (r.ok) loadFleet();
+    else alert('Грешка при качване');
+  };
+  input.click();
+}
+
+// Load saved theme
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'dark') { document.documentElement.setAttribute('data-theme', 'dark'); document.querySelector('.theme-toggle i').className = 'bi bi-sun-fill'; }
+})();
+
+// PWA Install
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('installPwaBtn');
+  if (btn) btn.style.display = 'flex';
+});
+async function installPwa() {
+  const btn = document.getElementById('installPwaBtn');
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const result = await deferredPrompt.userChoice;
+    if (result.outcome === 'accepted') deferredPrompt = null;
+    if (btn) btn.style.display = 'none';
+  }
+}
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').catch(() => {});
+}
+
+if (!token) login(); else { document.getElementById('refreshTime').textContent = new Date().toLocaleString('bg-BG'); loadDashboard(); }
+</script>
+</body>
+</html>
